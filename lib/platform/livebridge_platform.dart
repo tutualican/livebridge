@@ -177,6 +177,16 @@ class LiveBridgePlatform {
       _askInt('getNetworkSpeedMinThresholdBytesPerSecond');
   static Future<bool> setNetworkSpeedMinThresholdBytesPerSecond(int value) =>
       _askBool('setNetworkSpeedMinThresholdBytesPerSecond', {'value': value});
+  static Future<bool> getWeatherLiveUpdateEnabled() =>
+      _askBool('getWeatherLiveUpdateEnabled');
+  static Future<bool> setWeatherLiveUpdateEnabled(bool value) =>
+      _askBool('setWeatherLiveUpdateEnabled', {'value': value});
+  static Future<bool> isWeatherLocationPermissionGranted() =>
+      _askBool('isWeatherLocationPermissionGranted');
+  static Future<bool> requestWeatherLocationPermission() =>
+      _askBool('requestWeatherLocationPermission');
+  static Future<bool> refreshWeatherNow() => _askBool('refreshWeatherNow');
+
   static Future<bool> getChargingLiveUpdateEnabled() =>
       _askBool('getChargingLiveUpdateEnabled');
   static Future<bool> setChargingLiveUpdateEnabled(bool value) =>

@@ -41,6 +41,7 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
   bool _altBackgroundMode = false;
   bool _syncDnd = true;
   bool _chargingLiveUpdate = true;
+  bool _weatherLiveUpdate = false;
   bool _preventDismissing = false;
   bool _hideLockscreenContent = false;
   bool _convertedNotificationSound = false;
@@ -72,6 +73,8 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
       final Future<bool> syncDndFuture = LiveBridgePlatform.getSyncDndEnabled();
       final Future<bool> chargingLiveUpdateFuture =
           LiveBridgePlatform.getChargingLiveUpdateEnabled();
+      final Future<bool> weatherLiveUpdateFuture =
+          LiveBridgePlatform.getWeatherLiveUpdateEnabled();
       final Future<bool> preventDismissingFuture =
           LiveBridgePlatform.getPreventMirrorDismissEnabled();
       final Future<bool> hideLockscreenContentFuture =
@@ -95,6 +98,7 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
       final bool altBackgroundMode = await altBackgroundFuture;
       final bool syncDnd = await syncDndFuture;
       final bool chargingLiveUpdate = await chargingLiveUpdateFuture;
+      final bool weatherLiveUpdate = await weatherLiveUpdateFuture;
       final bool preventDismissing = await preventDismissingFuture;
       final bool hideLockscreenContent = await hideLockscreenContentFuture;
       final bool convertedNotificationSound =
@@ -123,6 +127,7 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
         _altBackgroundMode = altBackgroundMode;
         _syncDnd = syncDnd;
         _chargingLiveUpdate = chargingLiveUpdate;
+        _weatherLiveUpdate = weatherLiveUpdate;
         _preventDismissing = preventDismissing;
         _hideLockscreenContent = hideLockscreenContent;
         _convertedNotificationSound = convertedNotificationSound;
@@ -205,6 +210,30 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
     save: LiveBridgePlatform.setChargingLiveUpdateEnabled,
     apply: (saved) => _chargingLiveUpdate = saved,
   );
+
+  Future<void> _setWeatherLiveUpdate(bool value) async {
+    if (value == _weatherLiveUpdate) {
+      return;
+    }
+    setState(() => _weatherLiveUpdate = value);
+    if (value) {
+      bool granted =
+          await LiveBridgePlatform.isWeatherLocationPermissionGranted();
+      if (!granted) {
+        granted = await LiveBridgePlatform.requestWeatherLocationPermission();
+      }
+      if (!mounted) {
+        return;
+      }
+      if (!granted) {
+        showLbToast(context, message: AppStrings.of(context).weatherLocationDenied);
+      }
+    }
+    await LiveBridgePlatform.setWeatherLiveUpdateEnabled(value);
+    if (value) {
+      await LiveBridgePlatform.refreshWeatherNow();
+    }
+  }
 
   Future<void> _setPreventDismissing(bool value) async {
     if (value == _preventDismissing) {
@@ -392,6 +421,20 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
           final bool nextValue = !_chargingLiveUpdate;
           unawaited(LiveBridgeHaptics.toggle(nextValue));
           unawaited(_setChargingLiveUpdate(nextValue));
+        },
+      ),
+      LbListItemData(
+        title: strings.weatherLiveUpdateTitle,
+        description: strings.weatherLiveUpdateDescription,
+        showChevron: false,
+        toggleValue: _weatherLiveUpdate,
+        onToggle: (bool value) {
+          unawaited(_setWeatherLiveUpdate(value));
+        },
+        onTap: () {
+          final bool nextValue = !_weatherLiveUpdate;
+          unawaited(LiveBridgeHaptics.toggle(nextValue));
+          unawaited(_setWeatherLiveUpdate(nextValue));
         },
       ),
       LbListItemData(

@@ -245,6 +245,34 @@ class ConverterPrefs(context: Context) {
         prefs.edit().putBoolean(KEY_CHARGING_LIVE_UPDATE_ENABLED, value).apply()
     }
 
+    fun getWeatherLiveUpdateEnabled(): Boolean {
+        return prefs.getBoolean(KEY_WEATHER_LIVE_UPDATE_ENABLED, false)
+    }
+
+    fun setWeatherLiveUpdateEnabled(value: Boolean) {
+        prefs.edit().putBoolean(KEY_WEATHER_LIVE_UPDATE_ENABLED, value).apply()
+    }
+
+    fun getWeatherSnapshotRaw(): String? {
+        return prefs.getString(KEY_WEATHER_SNAPSHOT, null)
+    }
+
+    fun setWeatherSnapshotRaw(value: String?) {
+        val editor = prefs.edit()
+        if (value.isNullOrBlank()) editor.remove(KEY_WEATHER_SNAPSHOT) else editor.putString(KEY_WEATHER_SNAPSHOT, value)
+        editor.apply()
+    }
+
+    fun getWeatherLocationRaw(): String? {
+        return prefs.getString(KEY_WEATHER_LOCATION, null)
+    }
+
+    fun setWeatherLocationRaw(value: String?) {
+        val editor = prefs.edit()
+        if (value.isNullOrBlank()) editor.remove(KEY_WEATHER_LOCATION) else editor.putString(KEY_WEATHER_LOCATION, value)
+        editor.apply()
+    }
+
     fun hasKeepAliveForegroundPreference(): Boolean {
         return prefs.contains(KEY_KEEP_ALIVE_FOREGROUND_ENABLED)
     }
@@ -1238,6 +1266,9 @@ class ConverterPrefs(context: Context) {
         private const val KEY_KEEP_ALIVE_FOREGROUND_ENABLED = "keep_alive_foreground_enabled"
         private const val KEY_NETWORK_SPEED_ENABLED = "network_speed_enabled"
         private const val KEY_CHARGING_LIVE_UPDATE_ENABLED = "charging_live_update_enabled"
+        private const val KEY_WEATHER_LIVE_UPDATE_ENABLED = "weather_live_update_enabled"
+        private const val KEY_WEATHER_SNAPSHOT = "weather_snapshot"
+        private const val KEY_WEATHER_LOCATION = "weather_location"
         private const val KEY_WEAR_OS_LIVE_UPDATES_ENABLED = "wear_os_live_updates_enabled"
         private const val KEY_NETWORK_SPEED_HIDE_WHEN_LOCKED = "network_speed_hide_when_locked"
         private const val KEY_NETWORK_SPEED_MIN_THRESHOLD_BYTES_PER_SECOND =

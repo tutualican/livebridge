@@ -40,10 +40,25 @@ class LiveUpdateNotificationListenerService : NotificationListenerService() {
     private var listenerConnected = false
     @Volatile
     private var chargingReceiverRegistered = false
+    @Volatile
+    private var lockStateReceiverRegistered = false
 
     private val chargingReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             ChargingStatusNotifier.syncFromBatteryIntent(applicationContext, prefs, intent)
+        }
+    }
+
+    private val lockStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Intent.ACTION_USER_PRESENT) {
+                WeatherLiveUpdate.syncLockState(applicationContext, prefs)
+                return
+            }
+            mainHandler.postDelayed(
+                { WeatherLiveUpdate.syncLockState(applicationContext, prefs) },
+                700L
+            )
         }
     }
 
@@ -116,7 +131,9 @@ class LiveUpdateNotificationListenerService : NotificationListenerService() {
         LiveUpdateNotifier.ensureChannel(applicationContext)
         NetworkSpeedController.sync(applicationContext, prefs)
         registerChargingReceiver()
+        registerLockStateReceiver()
         ChargingStatusNotifier.sync(applicationContext, prefs)
+        WeatherScheduler.sync(applicationContext, prefs)
     }
 
     override fun onListenerConnected() {
@@ -202,7 +219,9 @@ class LiveUpdateNotificationListenerService : NotificationListenerService() {
         rebindScheduled = false
         snapshotSyncScheduled = false
         unregisterChargingReceiver()
+        unregisterLockStateReceiver()
         ChargingStatusNotifier.cancel(applicationContext)
+        WeatherLiveUpdate.cancel(applicationContext)
         if (activeInstance === this) {
             activeInstance = null
         }
@@ -233,6 +252,39 @@ class LiveUpdateNotificationListenerService : NotificationListenerService() {
         chargingReceiverRegistered = false
         try {
             applicationContext.unregisterReceiver(chargingReceiver)
+        } catch (_: IllegalArgumentException) {
+            // Already unregistered by the system.
+        }
+    }
+
+    private fun registerLockStateReceiver() {
+        if (lockStateReceiverRegistered) {
+            return
+        }
+        try {
+            ContextCompat.registerReceiver(
+                applicationContext,
+                lockStateReceiver,
+                IntentFilter().apply {
+                    addAction(Intent.ACTION_USER_PRESENT)
+                    addAction(Intent.ACTION_SCREEN_OFF)
+                    addAction(Intent.ACTION_SCREEN_ON)
+                },
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+            lockStateReceiverRegistered = true
+        } catch (error: Throwable) {
+            Log.w(TAG, "Unable to observe lock state", error)
+        }
+    }
+
+    private fun unregisterLockStateReceiver() {
+        if (!lockStateReceiverRegistered) {
+            return
+        }
+        lockStateReceiverRegistered = false
+        try {
+            applicationContext.unregisterReceiver(lockStateReceiver)
         } catch (_: IllegalArgumentException) {
             // Already unregistered by the system.
         }

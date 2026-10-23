@@ -237,11 +237,9 @@ object LiveUpdateNotifier {
     }
 
     private fun mirrorChannelLockscreenVisibility(context: Context): Int {
-        return if (ConverterPrefs(context).getHideLockscreenContentEnabled()) {
-            Notification.VISIBILITY_SECRET
-        } else {
-            Notification.VISIBILITY_PUBLIC
-        }
+        // The lock-screen privacy option now swaps in a redacted public version instead of
+        // hiding the whole live update, so the channel itself must stay visible.
+        return Notification.VISIBILITY_PUBLIC
     }
 
     fun clearRuntimeState() {
@@ -1840,7 +1838,7 @@ object LiveUpdateNotifier {
                     !runtimePrefs.getSmartMediaPlaybackShowOnLockScreen() ->
                 NotificationCompat.VISIBILITY_SECRET
 
-            hideLockscreenContent -> NotificationCompat.VISIBILITY_SECRET
+            hideLockscreenContent -> NotificationCompat.VISIBILITY_PRIVATE
             else -> NotificationCompat.VISIBILITY_PUBLIC
         }
         val useMediaActionSymbols = preferMediaControls &&
@@ -2071,6 +2069,40 @@ object LiveUpdateNotifier {
         builder.setLocalOnly(WearOsLiveUpdatesPolicy.isLocalOnly(
             Build.VERSION.SDK_INT, runtimePrefs.getWearOsLiveUpdatesEnabled()
         ))
+        if (hideLockscreenContent) {
+            val publicBuilder = NotificationCompat.Builder(
+                context,
+                mirrorChannel.id(convertedNotificationSound, convertedNotificationVibration)
+            )
+                .setContentTitle(appName)
+                .setContentText(
+                    NativeAppStrings.text(
+                        context,
+                        LOCKSCREEN_CONTENT_HIDDEN_TEXT,
+                        "Содержимое скрыто",
+                        "Contenido oculto",
+                        "Inhalt verborgen",
+                        "İçerik gizli"
+                    )
+                )
+                .setOnlyAlertOnce(true)
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .setShowWhen(false)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setCategory(
+                    if (callMirrorActive) {
+                        Notification.CATEGORY_CALL
+                    } else if (hasProgress) {
+                        Notification.CATEGORY_PROGRESS
+                    } else {
+                        Notification.CATEGORY_STATUS
+                    }
+                )
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            applySmallIcon(context, publicBuilder, preferredSmallIcon)
+            builder.setPublicVersion(publicBuilder.build())
+        }
         return builder.build()
     }
 

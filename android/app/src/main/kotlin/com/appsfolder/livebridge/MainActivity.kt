@@ -44,6 +44,8 @@ import com.appsfolder.livebridge.liveupdate.LiveParserDictionaryLoader
 import com.appsfolder.livebridge.liveupdate.LiveUpdateNotifier
 import com.appsfolder.livebridge.liveupdate.LiveUpdateNotificationListenerService
 import com.appsfolder.livebridge.liveupdate.ChargingStatusNotifier
+import com.appsfolder.livebridge.liveupdate.WeatherRepository
+import com.appsfolder.livebridge.liveupdate.WeatherScheduler
 import com.appsfolder.livebridge.liveupdate.networkspeed.NetworkSpeedController
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -56,6 +58,7 @@ import java.util.concurrent.Executors
 
 class MainActivity : FlutterActivity() {
     private var notificationPermissionResult: MethodChannel.Result? = null
+    private var weatherLocationPermissionResult: MethodChannel.Result? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,6 +95,7 @@ class MainActivity : FlutterActivity() {
         initializeKeepAliveDefaultIfNeeded(prefs)
         syncKeepAliveForegroundService(prefs)
         syncNetworkSpeedForegroundService(prefs)
+        WeatherScheduler.sync(applicationContext, prefs)
         clearDynamicLauncherShortcuts()
         LiveBridgeTileService.requestStateSync(applicationContext)
     }
@@ -106,6 +110,14 @@ class MainActivity : FlutterActivity() {
             val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
             notificationPermissionResult?.success(granted)
             notificationPermissionResult = null
+        }
+        if (requestCode == REQUEST_WEATHER_LOCATION) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            weatherLocationPermissionResult?.success(granted)
+            weatherLocationPermissionResult = null
+            if (granted) {
+                WeatherRepository.refreshAsync(applicationContext, ConverterPrefs(applicationContext))
+            }
         }
     }
 
@@ -529,6 +541,19 @@ class MainActivity : FlutterActivity() {
                 res.success(true)
             }
 
+            "isWeatherLocationPermissionGranted" -> res.success(isWeatherLocationPermissionGranted())
+            "requestWeatherLocationPermission" -> requestWeatherLocationPermission(res)
+            "getWeatherLiveUpdateEnabled" -> res.success(prefs.getWeatherLiveUpdateEnabled())
+            "setWeatherLiveUpdateEnabled" -> {
+                prefs.setWeatherLiveUpdateEnabled(call.argument<Boolean>("value") ?: false)
+                WeatherScheduler.sync(applicationContext, prefs)
+                res.success(true)
+            }
+            "refreshWeatherNow" -> {
+                WeatherRepository.refreshAsync(applicationContext, prefs)
+                res.success(true)
+            }
+
             "getChargingLiveUpdateEnabled" -> res.success(prefs.getChargingLiveUpdateEnabled())
             "setChargingLiveUpdateEnabled" -> {
                 prefs.setChargingLiveUpdateEnabled(call.argument<Boolean>("value") ?: true)
@@ -889,6 +914,7 @@ class MainActivity : FlutterActivity() {
         syncKeepAliveForegroundService(prefs)
         syncNetworkSpeedForegroundService(prefs)
         ChargingStatusNotifier.sync(applicationContext, prefs)
+        WeatherScheduler.sync(applicationContext, prefs)
         LiveBridgeTileService.requestStateSync(applicationContext)
     }
 
@@ -1049,6 +1075,33 @@ class MainActivity : FlutterActivity() {
             this,
             arrayOf(Manifest.permission.POST_NOTIFICATIONS),
             REQUEST_POST_NOTIFICATIONS
+        )
+    }
+
+    private fun isWeatherLocationPermissionGranted(): Boolean =
+        ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+    private fun requestWeatherLocationPermission(res: MethodChannel.Result) {
+        if (isWeatherLocationPermissionGranted()) {
+            res.success(true)
+            return
+        }
+        if (weatherLocationPermissionResult != null) {
+            res.error(
+                "permission_in_progress",
+                "Location permission request is already in progress",
+                null
+            )
+            return
+        }
+        weatherLocationPermissionResult = res
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+            REQUEST_WEATHER_LOCATION
         )
     }
 
@@ -1339,6 +1392,7 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val METHOD_CHANNEL = "livebridge/platform"
         private const val REQUEST_POST_NOTIFICATIONS = 2406
+        private const val REQUEST_WEATHER_LOCATION = 2407
         private const val TAG = "MainActivity"
         private const val INSTALLED_APPS_CACHE_TTL_MS = 10 * 60 * 1000L
         private const val MAX_ICON_CACHE_SIZE = 512

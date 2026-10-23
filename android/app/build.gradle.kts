@@ -80,7 +80,9 @@ gradle.taskGraph.whenReady {
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
     implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.work:work-runtime:2.10.0")
     implementation("io.github.d4viddf:hyperisland_kit:0.4.3")
 }
 

@@ -2277,6 +2277,42 @@ class AppStrings {
     ko: '충전 중 배터리 잔량과 남은 충전 시간을 표시합니다',
   );
 
+  String get weatherLiveUpdateTitle => tr(
+    en: 'Weather on lock screen',
+    es: 'Clima en la pantalla de bloqueo',
+    de: 'Wetter auf dem Sperrbildschirm',
+    ru: 'Погода на экране блокировки',
+    tr: 'Kilit ekranında hava durumu',
+    ptBr: 'Clima na tela de bloqueio',
+    zhHans: '锁屏天气',
+    zhHant: '鎖定畫面天氣',
+    ko: '잠금 화면 날씨',
+  );
+
+  String get weatherLiveUpdateDescription => tr(
+    en: 'Refreshes every 30 minutes and appears only while the phone is locked. Uses your approximate location.',
+    es: 'Se actualiza cada 30 minutos y solo aparece con el teléfono bloqueado. Usa tu ubicación aproximada.',
+    de: 'Wird alle 30 Minuten aktualisiert und erscheint nur, solange das Telefon gesperrt ist. Verwendet deinen ungefähren Standort.',
+    ru: 'Обновляется каждые 30 минут и отображается только при заблокированном телефоне. Использует приблизительное местоположение.',
+    tr: '30 dakikada bir güncellenir ve yalnızca telefon kilitliyken görünür. Yaklaşık konumunuzu kullanır.',
+    ptBr: 'Atualiza a cada 30 minutos e aparece apenas com o telefone bloqueado. Usa sua localização aproximada.',
+    zhHans: '每 30 分钟刷新一次，仅在手机锁定时显示。使用大致位置。',
+    zhHant: '每 30 分鐘重新整理一次，僅在手機鎖定時顯示。使用大約位置。',
+    ko: '30분마다 새로 고치며 휴대전화가 잠겨 있을 때만 표시됩니다. 대략적인 위치를 사용합니다.',
+  );
+
+  String get weatherLocationDenied => tr(
+    en: 'Location permission not granted. Weather will use an approximate location.',
+    es: 'Permiso de ubicación no concedido. El clima usará una ubicación aproximada.',
+    de: 'Standortberechtigung nicht erteilt. Das Wetter verwendet einen ungefähren Standort.',
+    ru: 'Разрешение на геолокацию не выдано. Погода будет использовать приблизительное местоположение.',
+    tr: 'Konum izni verilmedi. Hava durumu yaklaşık konum kullanacak.',
+    ptBr: 'Permissão de localização não concedida. O clima usará uma localização aproximada.',
+    zhHans: '未授予位置权限。天气将使用大致位置。',
+    zhHant: '未授予位置權限。天氣將使用大約位置。',
+    ko: '위치 권한이 없습니다. 날씨는 대략적인 위치를 사용합니다.',
+  );
+
   String get networkSpeedThresholdAlways => tr(
     en: 'Always show',
     es: 'Mostrar siempre',
