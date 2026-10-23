@@ -40,6 +40,7 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
   bool _hideFromRecents = false;
   bool _altBackgroundMode = false;
   bool _syncDnd = true;
+  bool _chargingLiveUpdate = true;
   bool _preventDismissing = false;
   bool _hideLockscreenContent = false;
   bool _convertedNotificationSound = false;
@@ -69,6 +70,8 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
       final Future<bool> altBackgroundFuture =
           LiveBridgePlatform.getKeepAliveForegroundEnabled();
       final Future<bool> syncDndFuture = LiveBridgePlatform.getSyncDndEnabled();
+      final Future<bool> chargingLiveUpdateFuture =
+          LiveBridgePlatform.getChargingLiveUpdateEnabled();
       final Future<bool> preventDismissingFuture =
           LiveBridgePlatform.getPreventMirrorDismissEnabled();
       final Future<bool> hideLockscreenContentFuture =
@@ -91,6 +94,7 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
       final hideFromRecents = await hideFromRecentsFuture;
       final bool altBackgroundMode = await altBackgroundFuture;
       final bool syncDnd = await syncDndFuture;
+      final bool chargingLiveUpdate = await chargingLiveUpdateFuture;
       final bool preventDismissing = await preventDismissingFuture;
       final bool hideLockscreenContent = await hideLockscreenContentFuture;
       final bool convertedNotificationSound =
@@ -118,6 +122,7 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
         _hideFromRecents = hideFromRecents;
         _altBackgroundMode = altBackgroundMode;
         _syncDnd = syncDnd;
+        _chargingLiveUpdate = chargingLiveUpdate;
         _preventDismissing = preventDismissing;
         _hideLockscreenContent = hideLockscreenContent;
         _convertedNotificationSound = convertedNotificationSound;
@@ -192,6 +197,14 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
     setState(() => _syncDnd = value);
     await LiveBridgePlatform.setSyncDndEnabled(value);
   }
+
+  Future<void> _setChargingLiveUpdate(bool value) => _savePreference(
+    key: 'charging_live_update',
+    value: value,
+    current: _chargingLiveUpdate,
+    save: LiveBridgePlatform.setChargingLiveUpdateEnabled,
+    apply: (saved) => _chargingLiveUpdate = saved,
+  );
 
   Future<void> _setPreventDismissing(bool value) async {
     if (value == _preventDismissing) {
@@ -365,6 +378,20 @@ class _SettingsAppConfigScreenState extends State<SettingsAppConfigScreen> {
           final bool nextValue = !_altBackgroundMode;
           unawaited(LiveBridgeHaptics.toggle(nextValue));
           unawaited(_setAltBackgroundMode(nextValue));
+        },
+      ),
+      LbListItemData(
+        title: strings.chargingLiveUpdateTitle,
+        description: strings.chargingLiveUpdateDescription,
+        showChevron: false,
+        toggleValue: _chargingLiveUpdate,
+        onToggle: (bool value) {
+          unawaited(_setChargingLiveUpdate(value));
+        },
+        onTap: () {
+          final bool nextValue = !_chargingLiveUpdate;
+          unawaited(LiveBridgeHaptics.toggle(nextValue));
+          unawaited(_setChargingLiveUpdate(nextValue));
         },
       ),
       LbListItemData(

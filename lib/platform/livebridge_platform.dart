@@ -177,6 +177,10 @@ class LiveBridgePlatform {
       _askInt('getNetworkSpeedMinThresholdBytesPerSecond');
   static Future<bool> setNetworkSpeedMinThresholdBytesPerSecond(int value) =>
       _askBool('setNetworkSpeedMinThresholdBytesPerSecond', {'value': value});
+  static Future<bool> getChargingLiveUpdateEnabled() =>
+      _askBool('getChargingLiveUpdateEnabled');
+  static Future<bool> setChargingLiveUpdateEnabled(bool value) =>
+      _askBool('setChargingLiveUpdateEnabled', {'value': value});
   static Future<bool> getSyncDndEnabled() => _askBool('getSyncDndEnabled');
   static Future<bool> setSyncDndEnabled(bool value) =>
       _askBool('setSyncDndEnabled', {'value': value});

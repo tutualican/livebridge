@@ -43,6 +43,7 @@ import com.appsfolder.livebridge.liveupdate.LiveParserDictionary
 import com.appsfolder.livebridge.liveupdate.LiveParserDictionaryLoader
 import com.appsfolder.livebridge.liveupdate.LiveUpdateNotifier
 import com.appsfolder.livebridge.liveupdate.LiveUpdateNotificationListenerService
+import com.appsfolder.livebridge.liveupdate.ChargingStatusNotifier
 import com.appsfolder.livebridge.liveupdate.networkspeed.NetworkSpeedController
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -528,6 +529,13 @@ class MainActivity : FlutterActivity() {
                 res.success(true)
             }
 
+            "getChargingLiveUpdateEnabled" -> res.success(prefs.getChargingLiveUpdateEnabled())
+            "setChargingLiveUpdateEnabled" -> {
+                prefs.setChargingLiveUpdateEnabled(call.argument<Boolean>("value") ?: true)
+                ChargingStatusNotifier.sync(applicationContext, prefs)
+                res.success(true)
+            }
+
             "getSyncDndEnabled" -> res.success(prefs.getSyncDndEnabled())
             "setSyncDndEnabled" -> {
                 prefs.setSyncDndEnabled(call.argument<Boolean>("value") ?: false)
@@ -880,6 +888,7 @@ class MainActivity : FlutterActivity() {
         }
         syncKeepAliveForegroundService(prefs)
         syncNetworkSpeedForegroundService(prefs)
+        ChargingStatusNotifier.sync(applicationContext, prefs)
         LiveBridgeTileService.requestStateSync(applicationContext)
     }
 

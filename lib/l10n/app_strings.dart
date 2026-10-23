@@ -2253,6 +2253,30 @@ class AppStrings {
     ko: '네트워크 속도',
   );
 
+  String get chargingLiveUpdateTitle => tr(
+    en: 'Charging status',
+    es: 'Estado de carga',
+    de: 'Ladestatus',
+    ru: 'Статус зарядки',
+    tr: 'Şarj durumu',
+    ptBr: 'Status de carregamento',
+    zhHans: '充电状态',
+    zhHant: '充電狀態',
+    ko: '충전 상태',
+  );
+
+  String get chargingLiveUpdateDescription => tr(
+    en: 'Shows the battery level and remaining charge time while the device is charging',
+    es: 'Muestra el nivel de batería y el tiempo restante de carga',
+    de: 'Zeigt Akkustand und verbleibende Ladezeit während des Ladens',
+    ru: 'Показывает уровень батареи и оставшееся время зарядки',
+    tr: 'Cihaz şarj olurken pil seviyesini ve kalan şarj süresini gösterir',
+    ptBr: 'Mostra o nível da bateria e o tempo restante de carregamento',
+    zhHans: '充电时显示电池电量和剩余充电时间',
+    zhHant: '充電時顯示電池電量和剩餘充電時間',
+    ko: '충전 중 배터리 잔량과 남은 충전 시간을 표시합니다',
+  );
+
   String get networkSpeedThresholdAlways => tr(
     en: 'Always show',
     es: 'Mostrar siempre',

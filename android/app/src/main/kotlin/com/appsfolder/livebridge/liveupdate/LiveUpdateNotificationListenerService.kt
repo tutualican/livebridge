@@ -2,8 +2,11 @@ package com.appsfolder.livebridge.liveupdate
 
 import android.app.Notification
 import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -13,6 +16,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.appsfolder.livebridge.liveupdate.networkspeed.NetworkSpeedController
 import kotlin.math.min
 
@@ -34,6 +38,14 @@ class LiveUpdateNotificationListenerService : NotificationListenerService() {
     private var snapshotSyncScheduled = false
     @Volatile
     private var listenerConnected = false
+    @Volatile
+    private var chargingReceiverRegistered = false
+
+    private val chargingReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            ChargingStatusNotifier.syncFromBatteryIntent(applicationContext, prefs, intent)
+        }
+    }
 
     private val rebindRunnable = object : Runnable {
         override fun run() {
@@ -103,6 +115,8 @@ class LiveUpdateNotificationListenerService : NotificationListenerService() {
 
         LiveUpdateNotifier.ensureChannel(applicationContext)
         NetworkSpeedController.sync(applicationContext, prefs)
+        registerChargingReceiver()
+        ChargingStatusNotifier.sync(applicationContext, prefs)
     }
 
     override fun onListenerConnected() {
@@ -113,6 +127,7 @@ class LiveUpdateNotificationListenerService : NotificationListenerService() {
         rebindScheduled = false
         KeepAliveForegroundService.sync(applicationContext, prefs)
         NetworkSpeedController.sync(applicationContext, prefs)
+        ChargingStatusNotifier.sync(applicationContext, prefs)
         scheduleSnapshotSync()
 
         if (!prefs.getConverterEnabled()) {
@@ -186,10 +201,41 @@ class LiveUpdateNotificationListenerService : NotificationListenerService() {
         mainHandler.removeCallbacksAndMessages(null)
         rebindScheduled = false
         snapshotSyncScheduled = false
+        unregisterChargingReceiver()
+        ChargingStatusNotifier.cancel(applicationContext)
         if (activeInstance === this) {
             activeInstance = null
         }
         super.onDestroy()
+    }
+
+    private fun registerChargingReceiver() {
+        if (chargingReceiverRegistered) {
+            return
+        }
+        try {
+            ContextCompat.registerReceiver(
+                applicationContext,
+                chargingReceiver,
+                IntentFilter(Intent.ACTION_BATTERY_CHANGED),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+            chargingReceiverRegistered = true
+        } catch (error: Throwable) {
+            Log.w(TAG, "Unable to observe battery state", error)
+        }
+    }
+
+    private fun unregisterChargingReceiver() {
+        if (!chargingReceiverRegistered) {
+            return
+        }
+        chargingReceiverRegistered = false
+        try {
+            applicationContext.unregisterReceiver(chargingReceiver)
+        } catch (_: IllegalArgumentException) {
+            // Already unregistered by the system.
+        }
     }
 
     private fun isSourceNotificationActive(key: String): Boolean? {
